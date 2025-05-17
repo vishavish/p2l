@@ -1,58 +1,25 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.ComponentModel;
+using Spectre.Console.Cli;
 
 
-void CutVideo(string input, string[] stamps)
+var app = new CommandApp<SplitCommand>();
+app.Run(args);
+
+
+internal sealed class SplitCommand : Command<SplitCommand.Settings>
 {
-	StringBuilder sb = new StringBuilder();
-	sb.Append($"-c \"ffmpeg -i {input} -c:a copy -c:v libx264 -crf 18 ");
-	for (int i = 0; i < stamps.Length; i++)
+	public sealed class Settings : CommandSettings
 	{
-		sb.Append($"-ss { stamps[i].Split('-')[0] } -to { stamps[i].Split('-')[1] } output{ i }.mp4 ");
+		[Description("Path to search for the timestamps.")]
+		[CommandArgument(0,"[dirPath]")]
+		public string? DirectoryPath { get; init; }
 	}
-	sb.Append("-metadata title -hide_banner \"");
 
-	ProcessStartInfo psi = new ProcessStartInfo()
+	public override int Execute(CommandContext context, Settings settings)
 	{
-		FileName = "/bin/bash",
-		Arguments = sb.ToString()	
-	};
+		App app = new();
+		app.Init(settings.DirectoryPath);
 
-	Process.Start(psi);
+		return 0;
+	}
 }
-
-(string, string[]) GetLineInfo(string line)
-{
-	char delimiter = ',';
-	int openBidx = line.IndexOf('[');
-	string input = line.Substring(0, openBidx);
-	return (input, line.Substring(openBidx + 1).Replace(']', ' ').Split(delimiter));
-}
-
-
-List<Task> tasks = new();
-Dictionary<string, string[]> fileInfo = new();
-const string FILENAME = "Timestamp.txt";
-string[] lines = File.ReadAllLines(FILENAME);
-
-// Console.WriteLine(Environment.CurrentDirectory);
-// Console.ReadLine();
-
-for(int i = 0; i < lines.Length; i++)
-{
-	(string name, string[] timestamps) = GetLineInfo(lines[i]);
-	fileInfo.Add(name, timestamps);
-}
-
-foreach (KeyValuePair<string, string[]> kv in fileInfo)
-{
-	tasks.Add(Task.Run(() => CutVideo(kv.Key, kv.Value)));
-}
-
-await Task.WhenAll(tasks);
-
-Console.WriteLine("------SUMMARY-------");
-Console.WriteLine("Press any key to close . . .");
-
-Console.ReadKey();
-
