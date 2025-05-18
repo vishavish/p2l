@@ -18,7 +18,7 @@ internal sealed class SplitCommand : Command<SplitCommand.Settings>
 	public override int Execute(CommandContext context, Settings settings)
 	{
 		App app = new();
-		app.Init(settings.DirectoryPath);
+		app.Init(settings.DirectoryPath!);
 
 		return 0;
 	}
