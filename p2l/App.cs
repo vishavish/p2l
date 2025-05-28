@@ -30,7 +30,7 @@ class App()
 			(string name, string[] timestamps) = GetLineInfo(lines[i]);
 			string rawFileName = Path.GetFileNameWithoutExtension(name);
 			
-			if (!File.Exists(name))
+			if (!File.Exists(name.Trim()))
 			{
 				Console.WriteLine($"File [{ name.Trim() }] could not be found.");
 				return;
@@ -65,6 +65,7 @@ class App()
 		StringBuilder sb = new StringBuilder();
 		string name = Path.GetFileNameWithoutExtension(input);
 		string programName = isWindows ? "cmd" : "/bin/bash" ;
+		string separator = isWindows ? "\\" : "//" ;
 		
 		if (isWindows)
 		{
@@ -72,12 +73,12 @@ class App()
 		}
 		else
 		{
-			sb.Append($"-c"); 
+			sb.Append($"-c "); 
 		}
-		sb.Append($"ffmpeg -i {input} -c:a copy -c:v libx264 -crf 18 ");
+		sb.Append($"\"ffmpeg -i {input} -c:a copy -c:v libx264 -crf 18 ");
 		for (int i = 0; i < stamps.Length; i++)
 		{
-			sb.Append($"-ss { stamps[i].Split('-')[0] } -to { stamps[i].Split('-')[1] } {name}\\{name}_{i}.mp4 ");
+			sb.Append($"-ss { stamps[i].Split('-')[0] } -to { stamps[i].Split('-')[1] } {name}{separator}{name}_{i}.mp4 ");
 		}
 		sb.Append("-hide_banner \"");
 
