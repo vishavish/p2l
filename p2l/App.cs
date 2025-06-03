@@ -17,49 +17,42 @@ class App()
 		Console.WriteLine("Checking file...");
 		if (!File.Exists(Path.Combine(dirPath.ToString(), FILENAME)))
 		{
-			Console.WriteLine($"{ FILENAME } could not be found.");
-			return;
+			throw new Exception($"{ FILENAME } could not be found.");
 		}
 
 		Console.WriteLine("Reading file...");
-
 		path = dirPath;
-		string[] lines = File.ReadAllLines(FILENAME);
+		string[] lines = File.ReadAllLines(Path.Combine(dirPath, FILENAME));
 		for (int i = 0; i < lines.Length; i++)
 		{
 			(string name, string[] timestamps) = GetLineInfo(lines[i]);
 			string rawFileName = Path.GetFileNameWithoutExtension(name);
 			
-			if (!File.Exists(name.Trim()))
+			if (!File.Exists(Path.Combine(dirPath, name)))	
 			{
-				Console.WriteLine($"File [{ name.Trim() }] could not be found.");
-				return;
+				throw new Exception($"Input file [{ name }] could not be found.");
 			}
 			
-			if (!IsValidTimestamp(timestamps)) return;
-			if (!Directory.Exists(Path.Combine(path, rawFileName)))
+			IsValidTimestamp(timestamps);
+			
+			if (!Directory.Exists(Path.Combine(dirPath, rawFileName))) 
 			{
-				Directory.CreateDirectory(Path.Combine(path, rawFileName));
+				Directory.CreateDirectory(Path.Combine(dirPath, rawFileName));
 			}
 			
 			fileInfo.Add(name, timestamps);
 		}
 
-		foreach (KeyValuePair<string, string[]> kv in fileInfo) {
-		 // tasks.Add(Task.Run(() => ProcessTimestamps(kv.Key, kv.Value)));
-		  
-		  ProcessTimestamps(kv.Key, kv.Value);
+		foreach (KeyValuePair<string, string[]> kv in fileInfo)
+		{
+			ProcessTimestamps(kv.Key, kv.Value);
 		}
 
-		// await Task.WhenAll(tasks);
-
-		Console.WriteLine("------SUMMARY-------");
 		Console.WriteLine("Press any key to close . . .");
-
 		Console.ReadKey();
 	}
 	
-	private void ProcessTimestamps(string input, string[] stamps)
+	private int ProcessTimestamps(string input, string[] stamps)
 	{
 		bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 		StringBuilder sb = new StringBuilder();
@@ -75,10 +68,11 @@ class App()
 		{
 			sb.Append($"-c "); 
 		}
-		sb.Append($"\"ffmpeg -i {input} -c:a copy -c:v libx264 -crf 18 ");
+
+		sb.Append($"\"ffmpeg -i {path}{input} -c:a copy -c:v libx264 -crf 18 ");
 		for (int i = 0; i < stamps.Length; i++)
 		{
-			sb.Append($"-ss { stamps[i].Split('-')[0] } -to { stamps[i].Split('-')[1] } {name}{separator}{name}_{i}.mp4 ");
+			sb.Append($"-ss { stamps[i].Split('-')[0] } -to { stamps[i].Split('-')[1] } {path}{name}{separator}{name}_{i}.mp4 ");
 		}
 		sb.Append("-hide_banner \"");
 
@@ -92,13 +86,22 @@ class App()
 
 		using var proc = Process.Start(psi);
 		proc!.WaitForExit();
+		
+		return proc.ExitCode;
 	}
 
 	private (string, string[]) GetLineInfo(string line)
 	{
 		char delimiter = ',';
 		int openBidx = line.IndexOf('[');
-		return (line.Substring(0, openBidx), line.Substring(openBidx + 1).Replace(']', ' ').Split(delimiter));
+		int closeBidx = line.IndexOf(']');
+		
+		if (openBidx < 0 || closeBidx < 0)
+		{
+			throw new ArgumentException("Missing `[` or `]` in your Timestamps.txt file.");
+		}
+		
+		return (line.Substring(0, openBidx).Trim(), line.Substring(openBidx + 1).Replace(']', ' ').Split(delimiter));
 	}
 
 	private bool IsValidTimestamp(string[] timestamp)
@@ -108,13 +111,12 @@ class App()
 
 		for(int i = 0; i < timestamp.Length; i++)
 		{
-			string[] tstampList = timestamp[i].Split('-');
-			for (int j = 0; j < tstampList.Length; j++)
+			string[] tempList = timestamp[i].Split('-');
+			for (int j = 0; j < tempList.Length; j++)
 			{
-				if (!TimeSpan.TryParseExact(tstampList[j].Trim(), format, CultureInfo.InvariantCulture, out TimeSpan _duration))
+				if (!TimeSpan.TryParseExact(tempList[j].Trim(), format, CultureInfo.InvariantCulture, out TimeSpan _))
 				{
-					Console.WriteLine($"{ tstampList[j] }: invalid");
-					return false;
+					throw new ArgumentException("One or more timestamps are invalid. Please check and try again.");
 				}
 			}
 		}
