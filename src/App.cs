@@ -10,7 +10,6 @@ class App()
 	
 	Dictionary<string, string[]> fileInfo = new();
 	string path = "";
-	List<Task> tasks = new();
 	
 	public void Init(string dirPath)
 	{
@@ -34,8 +33,8 @@ class App()
 			}
 			
 			Console.WriteLine($"Validating timestaps [{ i + 1 }/{ lines.Length }]");
-			IsValidTimestamp(timestamps);
-			
+			ValidateTimestamps(timestamps);
+						
 			if (!Directory.Exists(Path.Combine(dirPath, rawFileName))) 
 			{
 				Directory.CreateDirectory(Path.Combine(dirPath, rawFileName));
@@ -55,8 +54,8 @@ class App()
 	
 	private int ProcessTimestamps(string input, string[] stamps)
 	{
-		bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 		StringBuilder sb = new StringBuilder();
+		bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 		string name = Path.GetFileNameWithoutExtension(input);
 		string programName = isWindows ? "cmd" : "/bin/bash" ;
 		string separator = isWindows ? "\\" : "//" ;
@@ -105,7 +104,7 @@ class App()
 		return (line.Substring(0, openBidx).Trim(), line.Substring(openBidx + 1).Replace(']', ' ').Split(delimiter));
 	}
 
-	private bool IsValidTimestamp(string[] timestamp)
+	private bool ValidateTimestamps(string[] timestamp)
 	{
 		string format = @"mm\:ss";
 
