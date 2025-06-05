@@ -1,25 +1,24 @@
-﻿using System.ComponentModel;
-using Spectre.Console.Cli;
-
-
-var app = new CommandApp<SplitCommand>();
-app.Run(args);
-
-
-internal sealed class SplitCommand : Command<SplitCommand.Settings>
+﻿if (args.Length > 0)
 {
-	public sealed class Settings : CommandSettings
+	switch(args[0])
 	{
-		[Description("Path to search for the timestamps.")]
-		[CommandArgument(0,"[dirPath]")]
-		public string? DirectoryPath { get; init; }
+		case "-help":
+		case "--h"  :
+			ShowUsage();
+			break;
+		default:
+			new App().Init(args[0]);
+			break;
 	}
+} 
+else 
+	ShowUsage();
+	
 
-	public override int Execute(CommandContext context, Settings settings)
-	{
-		App app = new();
-		app.Init(settings.DirectoryPath!);
-
-		return 0;
-	}
+void ShowUsage()
+{
+	Console.WriteLine($"USAGE: p2l.dll  <dirpath> [OPTION]\n");
+	Console.WriteLine("<dirPath>       Path to search for the Timestamp.txt\n");
+	Console.WriteLine("[OPTION]");
+	Console.WriteLine("-help | --h     Print the help info.");
 }

@@ -15,7 +15,7 @@ class App()
 	public void Init(string dirPath)
 	{
 		Console.WriteLine("Checking file...");
-		if (!File.Exists(Path.Combine(dirPath.ToString(), FILENAME)))
+		if (!File.Exists(Path.Combine(dirPath, FILENAME)))
 		{
 			throw new Exception($"{ FILENAME } could not be found.");
 		}
@@ -33,6 +33,7 @@ class App()
 				throw new Exception($"Input file [{ name }] could not be found.");
 			}
 			
+			Console.WriteLine($"Validating timestaps [{ i + 1 }/{ lines.Length }]");
 			IsValidTimestamp(timestamps);
 			
 			if (!Directory.Exists(Path.Combine(dirPath, rawFileName))) 
@@ -94,11 +95,11 @@ class App()
 	{
 		char delimiter = ',';
 		int openBidx = line.IndexOf('[');
-		int closeBidx = line.IndexOf(']');
+		int closeBidx = line.LastIndexOf(']');
 		
 		if (openBidx < 0 || closeBidx < 0)
 		{
-			throw new ArgumentException("Missing `[` or `]` in your Timestamps.txt file.");
+			throw new Exception("Missing `[` or `]` in your Timestamp.txt file.");
 		}
 		
 		return (line.Substring(0, openBidx).Trim(), line.Substring(openBidx + 1).Replace(']', ' ').Split(delimiter));
@@ -106,7 +107,6 @@ class App()
 
 	private bool IsValidTimestamp(string[] timestamp)
 	{
-		Console.WriteLine("Validating timestamps...");
 		string format = @"mm\:ss";
 
 		for(int i = 0; i < timestamp.Length; i++)
@@ -116,7 +116,7 @@ class App()
 			{
 				if (!TimeSpan.TryParseExact(tempList[j].Trim(), format, CultureInfo.InvariantCulture, out TimeSpan _))
 				{
-					throw new ArgumentException("One or more timestamps are invalid. Please check and try again.");
+					throw new Exception("One or more timestamps are invalid. Please check and try again.");
 				}
 			}
 		}

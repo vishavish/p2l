@@ -1,10 +1,10 @@
 # p2l
 
-**p2l** (`putol`; in english `cut`) is a CLI-tool made with .NET to cut video clips using [FFmpeg](https://ffmpeg.org/).
+**p2l** (`putol`; in english `cut`) is a CLI-tool made with .NET to cut video files using [FFmpeg](https://ffmpeg.org/).
 
 ## Purpose
 
-I play games a lot and have lots of clips. I needed a way to cut them without using a video editor.
+I play games and have lots of clips. I needed a way to cut them without using a video editor.
 
 ## Usage
 
